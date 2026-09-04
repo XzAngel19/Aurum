@@ -1,0 +1,8 @@
+# Aurum
+aurum/
+Aurum/configs/*.json
+!Aurum/configs/.gitkeep
+*.log
+.DS_Store
+Thumbs.db
+.arena/
