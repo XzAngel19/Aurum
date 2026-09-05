@@ -36,46 +36,93 @@ local executorName = "unknown"
 pcall(function() if type(identifyexecutor) == "function" then executorName = identifyexecutor() end end)
 
 --------------------------------------------------------------------
--- Theme / accent system
+-- Theme system
 --------------------------------------------------------------------
-local ACCENTS = {
-    { "Aurum",   Color3.fromRGB(232, 196, 66) },
-    { "Crimson", Color3.fromRGB(222, 72, 72) },
-    { "Arctic",  Color3.fromRGB(88, 190, 236) },
-    { "Emerald", Color3.fromRGB(78, 204, 122) },
-    { "Violet",  Color3.fromRGB(172, 112, 240) },
-    { "Mono",    Color3.fromRGB(205, 205, 205) },
-}
-local ACCENT_NAMES = {}
-for _, a in ipairs(ACCENTS) do table.insert(ACCENT_NAMES, a[1]) end
+local function rgb(r, g, b) return Color3.fromRGB(r, g, b) end
 
-local THEME = {
-    Background = Color3.fromRGB(11, 11, 11),
-    Panel      = Color3.fromRGB(17, 17, 17),
-    Element    = Color3.fromRGB(26, 26, 26),
-    Text       = Color3.fromRGB(232, 232, 232),
-    TextDim    = Color3.fromRGB(122, 122, 122),
-    Font       = Enum.Font.Code,
-    Accent     = ACCENTS[1][2],
+local THEMES = {
+	-- house themes
+	{ Name = "Aurum",       Background = rgb(11, 11, 11),  Panel = rgb(17, 17, 17),  Element = rgb(26, 26, 26),  Text = rgb(232, 232, 232), TextDim = rgb(122, 122, 122), Accent = rgb(232, 196, 66) },
+	{ Name = "Obsidian",    Background = rgb(8, 8, 8),     Panel = rgb(13, 13, 13),  Element = rgb(20, 20, 20),  Text = rgb(236, 236, 236), TextDim = rgb(108, 108, 108), Accent = rgb(214, 214, 214) },
+	{ Name = "Graphite",    Background = rgb(22, 23, 25),  Panel = rgb(28, 29, 32),  Element = rgb(37, 38, 42),  Text = rgb(228, 230, 235), TextDim = rgb(128, 132, 140), Accent = rgb(96, 165, 250) },
+	{ Name = "Midnight",    Background = rgb(10, 12, 20),  Panel = rgb(15, 18, 30),  Element = rgb(22, 26, 42),  Text = rgb(226, 230, 245), TextDim = rgb(112, 120, 150), Accent = rgb(112, 140, 255) },
+	{ Name = "Crimson",     Background = rgb(14, 9, 10),   Panel = rgb(20, 13, 14),  Element = rgb(30, 19, 21),  Text = rgb(238, 226, 228), TextDim = rgb(140, 110, 115), Accent = rgb(225, 64, 78) },
+	{ Name = "Emerald",     Background = rgb(9, 13, 11),   Panel = rgb(13, 19, 16),  Element = rgb(20, 28, 24),  Text = rgb(226, 238, 230), TextDim = rgb(110, 138, 120), Accent = rgb(62, 200, 128) },
+	{ Name = "Amethyst",    Background = rgb(13, 10, 18),  Panel = rgb(19, 15, 27),  Element = rgb(28, 22, 40),  Text = rgb(234, 228, 244), TextDim = rgb(130, 118, 155), Accent = rgb(170, 120, 250) },
+	{ Name = "Ember",       Background = rgb(14, 11, 9),   Panel = rgb(21, 16, 13),  Element = rgb(31, 24, 19),  Text = rgb(240, 232, 224), TextDim = rgb(145, 125, 110), Accent = rgb(245, 130, 50) },
+	{ Name = "Rose",        Background = rgb(16, 10, 13),  Panel = rgb(23, 15, 19),  Element = rgb(33, 22, 28),  Text = rgb(242, 230, 236), TextDim = rgb(150, 120, 135), Accent = rgb(240, 105, 150) },
+	{ Name = "Arctic",      Background = rgb(10, 14, 17),  Panel = rgb(15, 21, 25),  Element = rgb(22, 31, 37),  Text = rgb(228, 240, 245), TextDim = rgb(115, 140, 150), Accent = rgb(92, 205, 235) },
+	-- editor palettes
+	{ Name = "Nord",        Background = rgb(36, 41, 51),  Panel = rgb(46, 52, 64),  Element = rgb(59, 66, 82),  Text = rgb(236, 239, 244), TextDim = rgb(143, 152, 170), Accent = rgb(136, 192, 208) },
+	{ Name = "Dracula",     Background = rgb(33, 34, 44),  Panel = rgb(40, 42, 54),  Element = rgb(52, 55, 70),  Text = rgb(248, 248, 242), TextDim = rgb(120, 126, 150), Accent = rgb(189, 147, 249) },
+	{ Name = "Tokyo Night", Background = rgb(22, 22, 30),  Panel = rgb(26, 27, 38),  Element = rgb(36, 40, 59),  Text = rgb(192, 202, 245), TextDim = rgb(86, 95, 137),   Accent = rgb(122, 162, 247) },
+	{ Name = "Catppuccin",  Background = rgb(24, 24, 37),  Panel = rgb(30, 30, 46),  Element = rgb(49, 50, 68),  Text = rgb(205, 214, 244), TextDim = rgb(127, 132, 156), Accent = rgb(203, 166, 247) },
+	{ Name = "Gruvbox",     Background = rgb(29, 32, 33),  Panel = rgb(40, 40, 40),  Element = rgb(60, 56, 54),  Text = rgb(235, 219, 178), TextDim = rgb(146, 131, 116), Accent = rgb(250, 189, 47) },
+	{ Name = "One Dark",    Background = rgb(33, 37, 43),  Panel = rgb(40, 44, 52),  Element = rgb(50, 56, 66),  Text = rgb(171, 178, 191), TextDim = rgb(92, 99, 112),   Accent = rgb(97, 175, 239) },
+	{ Name = "Solarized",   Background = rgb(0, 36, 46),   Panel = rgb(0, 43, 54),   Element = rgb(7, 54, 66),   Text = rgb(238, 232, 213), TextDim = rgb(101, 123, 131), Accent = rgb(181, 137, 0) },
+	{ Name = "Monokai",     Background = rgb(34, 35, 30),  Panel = rgb(39, 40, 34),  Element = rgb(52, 53, 46),  Text = rgb(248, 248, 242), TextDim = rgb(117, 113, 94),  Accent = rgb(166, 226, 46) },
 }
+local THEME_NAMES, THEME_BY_NAME = {}, {}
+for _, t in ipairs(THEMES) do table.insert(THEME_NAMES, t.Name) THEME_BY_NAME[t.Name] = t end
+
+local ROLES = { "Background", "Panel", "Element", "Text", "TextDim", "Accent", "AccentDim" }
+local THEME = { Font = Enum.Font.Code, Name = THEMES[1].Name }
+for _, r in ipairs(ROLES) do THEME[r] = THEMES[1][r] end
 THEME.AccentDim = THEME.Accent:Lerp(THEME.Background, 0.55)
 
 local Themed, Refreshers = {}, {}
-local function accent(inst, prop, dim)
-    inst[prop] = dim and THEME.AccentDim or THEME.Accent
-    table.insert(Themed, { inst, prop, dim })
-    return inst
+local function themed(inst, prop, role)          -- explicit registration for any palette role
+	inst[prop] = THEME[role]
+	table.insert(Themed, { inst, prop, role })
+	return inst
 end
-local function setAccent(color)
-    THEME.Accent = color
-    THEME.AccentDim = color:Lerp(THEME.Background, 0.55)
-    for i = #Themed, 1, -1 do
-        local t = Themed[i]
-        if t[1].Parent == nil then
-            table.remove(Themed, i)
-        else
-            pcall(function() t[1][t[2]] = t[3] and THEME.AccentDim or THEME.Accent end)
-        end
+local function accent(inst, prop, dim)           -- kept for compatibility with existing calls
+	return themed(inst, prop, dim and "AccentDim" or "Accent")
+end
+local function noTheme(inst) inst:SetAttribute("NoTheme", true) return inst end
+
+local ScreenGuiRef -- assigned right after the ScreenGui is created
+local COLOR_PROPS = { "BackgroundColor3", "TextColor3", "Color", "ImageColor3", "ScrollBarImageColor3", "PlaceholderColor3" }
+
+local function applyTheme(t)
+	local old = {}
+	for _, r in ipairs(ROLES) do old[r] = THEME[r] end
+	for _, r in ipairs(ROLES) do if t[r] then THEME[r] = t[r] end end
+	THEME.AccentDim = t.AccentDim or THEME.Accent:Lerp(THEME.Background, 0.55)
+	THEME.Name = t.Name or THEME.Name
+
+	-- 1) explicit registrations
+	for i = #Themed, 1, -1 do
+		local e = Themed[i]
+		if e[1].Parent == nil then table.remove(Themed, i)
+		else pcall(function() e[1][e[2]] = THEME[e[3]] end) end
+	end
+	-- 2) everything else painted with an old palette colour
+	if ScreenGuiRef then
+		for _, d in ipairs(ScreenGuiRef:GetDescendants()) do
+			if not (d:GetAttribute("NoTheme") or (d.Parent and d.Parent:GetAttribute("NoTheme"))) then
+				for _, prop in ipairs(COLOR_PROPS) do
+					local ok, cur = pcall(function() return d[prop] end)
+					if ok and typeof(cur) == "Color3" then
+						for _, r in ipairs(ROLES) do
+							if cur == old[r] and old[r] ~= THEME[r] then d[prop] = THEME[r] break end
+						end
+					end
+				end
+			end
+		end
+	end
+	for _, fn in ipairs(Refreshers) do pcall(fn) end
+end
+local function setTheme(name)
+	local t = THEME_BY_NAME[name]
+	if t then applyTheme(t) end
+end
+local function setAccent(color) applyTheme({ Accent = color }) end
+local ACCENTS = {}
+for _, t in ipairs(THEMES) do table.insert(ACCENTS, {t.Name, t.Accent}) end
+local ACCENT_NAMES = THEME_NAMES
+
     end
     for _, fn in ipairs(Refreshers) do pcall(fn) end
 end
@@ -167,6 +214,7 @@ do
         end
     end)
 end
+ScreenGuiRef = ScreenGui
 
 local UIScaleObj = Instance.new("UIScale")
 UIScaleObj.Scale = 1
@@ -219,17 +267,31 @@ local function stroke(parent, color, thickness, transparency)
 end
 
 local Glows = {}
+local GlowSettings = { intensity = 0.6, spread = 1, mode = "Static", focus = nil }
 local function addGlow(frame)
     accent(stroke(frame, nil, 1, 0), "Color")
+    local set = { window = frame, layers = {} }
     for _, g in ipairs({ { 3, 0.6 }, { 6, 0.8 }, { 10, 0.9 } }) do
         local layer = create("Frame", { BackgroundTransparency = 1, Size = UDim2.fromScale(1, 1), Parent = frame })
-        local s = accent(stroke(layer, nil, g[1], g[2]), "Color")
-        table.insert(Glows, { s, g[2] })
+        table.insert(set.layers, { stroke = accent(stroke(layer, nil, g[1], g[2]), "Color"), thickness = g[1], transparency = g[2] })
+    end
+    table.insert(Glows, set)
+end
+local function updateGlow(pulse)
+    pulse = pulse or 1
+    for _, set in ipairs(Glows) do
+        local i = GlowSettings.intensity * pulse
+        if GlowSettings.mode == "Focus" and GlowSettings.focus ~= set.window then i *= 0.25 end
+        for _, l in ipairs(set.layers) do
+            l.stroke.Transparency = 1 - (1 - l.transparency) * i
+            l.stroke.Thickness = l.thickness * GlowSettings.spread
+        end
     end
 end
-local function setGlow(v)
-    for _, g in ipairs(Glows) do g[1].Transparency = 1 - (1 - g[2]) * v end
-end
+local function setGlow(v)       GlowSettings.intensity = v updateGlow() end
+local function setGlowSpread(v) GlowSettings.spread = v    updateGlow() end
+local function setGlowMode(m)   GlowSettings.mode = m      updateGlow() end
+local function setGlowFocus(w)  GlowSettings.focus = w     if GlowSettings.mode == "Focus" then updateGlow() end end
 
 local Connections = {}
 local function bind(signal, fn)
@@ -237,6 +299,11 @@ local function bind(signal, fn)
     table.insert(Connections, c)
     return c
 end
+bind(RunService.Heartbeat, function()
+    if GlowSettings.mode == "Breathe" then
+        updateGlow(0.55 + 0.45 * (0.5 + 0.5 * math.sin(os.clock() * 2)))
+    end
+end)
 
 local Windows, WindowOrder = {}, 1
 
@@ -257,6 +324,27 @@ local function fitToScreen(win)
 end
 local function fitAll()
     for _, w in pairs(Windows) do fitToScreen(w) end
+end
+local ScaleState = { manual = 1, auto = false }
+local function applyScale(v)
+    v = math.clamp(v, 0.5, 2)
+    local oldScale, vp = UIScaleObj.Scale, ScreenGui.AbsoluteSize
+    local anchors = {}
+    for _, w in pairs(Windows) do
+        local c = w.AbsolutePosition + w.AbsoluteSize / 2
+        anchors[w] = { Vector2.new(c.X / vp.X, c.Y / vp.Y), w.AbsoluteSize / oldScale }
+    end
+    UIScaleObj.Scale = v
+    for w, a in pairs(anchors) do
+        local target = Vector2.new(a[1].X * vp.X, a[1].Y * vp.Y) / v
+        w.Position = UDim2.fromOffset(target.X - a[2].X / 2, target.Y - a[2].Y / 2)
+    end
+    task.delay(0, fitAll)
+end
+local function autoScale()
+    local h = ScreenGui.AbsoluteSize.Y
+    if h <= 0 then return 1 end
+    return math.clamp(math.floor(h / 1080 * 20 + 0.5) / 20, 0.6, 1.6) -- 0.05 steps, 1080p = 1.0
 end
 
 local function makeDraggable(frame, handle)
@@ -294,6 +382,7 @@ local function makeWindow(name, position, size, title, visible)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
             WindowOrder += 1
             win.ZIndex = WindowOrder
+            setGlowFocus(win)
         end
     end)
     local content = win
@@ -333,7 +422,8 @@ end
 --------------------------------------------------------------------
 local Registry = {}
 local S = { blur = true, blurAmount = 12, dim = false, notifications = true, autosave = true,
-    preview = true, wmFps = true, wmPing = true, wmTime = true }
+    preview = true, wmFps = true, wmPing = true, wmTime = true, customAccent = nil }
+local TargetHUD = { enabled = true, source = "Self", hideEmpty = false, target = nil, refresh = function() end }
 local saveSettings
 local saveQueued = false
 
@@ -400,6 +490,7 @@ local palettePopup = create("Frame", {
     create("UIPadding", { PaddingLeft = UDim.new(0, 3), PaddingRight = UDim.new(0, 3), PaddingTop = UDim.new(0, 3), PaddingBottom = UDim.new(0, 3) }),
 })
 accent(stroke(palettePopup, nil, 1, 0.2), "Color")
+noTheme(palettePopup)
 local paletteFn
 for i, c in ipairs(PALETTE) do
     local b = create("TextButton", { Text = "", AutoButtonColor = false, BackgroundColor3 = c, BorderSizePixel = 0, LayoutOrder = i, Parent = palettePopup })
@@ -428,22 +519,107 @@ end)
 --------------------------------------------------------------------
 -- Keybind infrastructure
 --------------------------------------------------------------------
-local Bindings = {}
+local Bindings = {}   -- { key, mode, name, id, fn, hold, active, refresh, allowModes, button }
 local listening
 local refreshKeybindList = function() end
+local BIND_MODES = { "Toggle", "Hold", "Always" }
 local KEY_SHORT = {
     LeftShift = "LShift", RightShift = "RShift", LeftControl = "LCtrl", RightControl = "RCtrl",
     LeftAlt = "LAlt", RightAlt = "RAlt", CapsLock = "Caps", Insert = "Ins", Delete = "Del",
     PageUp = "PgUp", PageDown = "PgDn", Backquote = "`", Return = "Enter",
+    MouseButton2 = "MB2", MouseButton3 = "MB3",
 }
 local function keyName(k)
+    if not k then return "none" end
     local n = KEY_SHORT[k.Name] or k.Name
-    if #n > 6 then n = n:sub(1, 6) end
-    return n
+    return #n > 6 and n:sub(1, 6) or n
 end
-local function startListening(b)
-    listening = b
-    b.refresh()
+local function keyToString(k) return k and k.Name or "" end
+local function keyFromString(s)
+    if not s or s == "" then return nil end
+    local ok, v = pcall(function() return Enum.KeyCode[s] end)
+    if ok and v then return v end
+    ok, v = pcall(function() return Enum.UserInputType[s] end)
+    return (ok and v) or nil
+end
+local function inputKey(input) -- keyboard keys + MB2/MB3 (MB1 is reserved for the UI)
+    if input.UserInputType == Enum.UserInputType.Keyboard then
+        return input.KeyCode ~= Enum.KeyCode.Unknown and input.KeyCode or nil
+    end
+    if input.UserInputType == Enum.UserInputType.MouseButton2 or input.UserInputType == Enum.UserInputType.MouseButton3 then
+        return input.UserInputType
+    end
+    return nil
+end
+
+-- right-click mode menu (shared)
+local modePopup = create("Frame", { BackgroundColor3 = THEME.Element, BorderSizePixel = 0, Visible = false, ZIndex = 200000, Parent = ScreenGui },
+    { create("UIListLayout", { SortOrder = Enum.SortOrder.LayoutOrder }) })
+themed(modePopup, "BackgroundColor3", "Element")
+accent(stroke(modePopup, nil, 1, 0.2), "Color")
+local modeTarget
+for i, m in ipairs(BIND_MODES) do
+    local b = create("TextButton", {
+        BackgroundTransparency = 1, AutoButtonColor = false, Text = "  " .. m:lower(), TextColor3 = THEME.TextDim,
+        Font = THEME.Font, TextSize = 11, TextXAlignment = Enum.TextXAlignment.Left, Size = UDim2.new(1, 0, 0, 16), LayoutOrder = i, Parent = modePopup,
+    })
+    b.MouseEnter:Connect(function() b.TextColor3 = THEME.Accent end)
+    b.MouseLeave:Connect(function() b.TextColor3 = THEME.TextDim end)
+    b.MouseButton1Click:Connect(function()
+        if modeTarget then
+            modeTarget.mode = m
+            if m == "Always" and modeTarget.hold then modeTarget.hold(true) end
+            modeTarget.refresh()
+            changed(modeTarget.id .. ".mode")
+        end
+        closePopup()
+    end)
+end
+
+-- the "[key]" button used by Toggle and Keybind
+local function BindButton(row, opts)
+    local width = opts.width or 64
+    local kb = create("TextButton", {
+        BackgroundTransparency = 1, AutoButtonColor = false, Text = "", TextColor3 = THEME.TextDim, Font = THEME.Font, TextSize = 10,
+        Size = UDim2.new(0, width, 1, 0), Position = UDim2.new(1, -width, 0, 0), TextXAlignment = Enum.TextXAlignment.Right, Parent = row,
+    })
+    local binding = {
+        key = opts.default, mode = "Toggle", name = opts.name, id = opts.id, fn = opts.fn, hold = opts.hold,
+        active = opts.active, allowModes = opts.modes ~= false, button = kb,
+    }
+    binding.refresh = function()
+        if listening == binding then
+            kb.Text, kb.TextColor3 = "[...]", THEME.Text
+        else
+            local tag = binding.key and ("[" .. keyName(binding.key) .. "]") or "[+]"
+            if binding.allowModes and binding.mode ~= "Toggle" then tag = binding.mode:sub(1, 1):lower() .. ":" .. tag end
+            kb.Text = tag
+            kb.TextColor3 = binding.key and THEME.Accent or THEME.TextDim
+        end
+        refreshKeybindList()
+    end
+    kb.MouseButton1Click:Connect(function() listening = binding binding.refresh() end)
+    kb.MouseButton2Click:Connect(function()
+        if not binding.allowModes then return end
+        modeTarget = binding
+        showPopup(modePopup, kb, 76, #BIND_MODES * 16)
+    end)
+    table.insert(Bindings, binding)
+    table.insert(Refreshers, binding.refresh)
+    register(binding.id, {
+        get = function() return keyToString(binding.key) end,
+        set = function(v) binding.key = keyFromString(v) binding.refresh() end,
+        menu = opts.menu,
+    })
+    if binding.allowModes then
+        register(binding.id .. ".mode", {
+            get = function() return binding.mode end,
+            set = function(v) if table.find(BIND_MODES, v) then binding.mode = v binding.refresh() end end,
+            menu = opts.menu,
+        })
+    end
+    binding.refresh()
+    return binding
 end
 
 --------------------------------------------------------------------
@@ -503,35 +679,8 @@ local function Toggle(parent, text, opts)
 
     local rightX, binding = -2, nil
     if opts.keybind then
-        local kb = create("TextButton", {
-            BackgroundTransparency = 1, AutoButtonColor = false, Text = "[+]", TextColor3 = THEME.TextDim,
-            Font = THEME.Font, TextSize = 10, Size = UDim2.new(0, 50, 1, 0), Position = UDim2.new(1, -52, 0, 0),
-            TextXAlignment = Enum.TextXAlignment.Right, Parent = row,
-        })
-        binding = { key = nil, name = text, id = id .. ".key" }
-        binding.active = function() return enabled end
-        binding.refresh = function()
-            if listening == binding then
-                kb.Text, kb.TextColor3 = "[...]", THEME.Text
-            else
-                kb.Text = binding.key and ("[" .. keyName(binding.key) .. "]") or "[+]"
-                kb.TextColor3 = binding.key and THEME.Accent or THEME.TextDim
-            end
-            refreshKeybindList()
-        end
-        kb.MouseButton1Click:Connect(function() startListening(binding) end)
-        table.insert(Bindings, binding)
-        table.insert(Refreshers, binding.refresh)
-        register(binding.id, {
-            get = function() return binding.key and binding.key.Name or "" end,
-            set = function(v)
-                local ok, kc = pcall(function() return Enum.KeyCode[v] end)
-                binding.key = (ok and v ~= "") and kc or nil
-                binding.refresh()
-            end,
-            menu = opts.menu,
-        })
-        rightX = -56
+        binding = BindButton(row, { id = id .. ".key", name = text, active = function() return enabled end, menu = opts.menu })
+        rightX = -68
     end
     if opts.color then
         local colors = typeof(opts.color) == "Color3" and { opts.color } or opts.color
@@ -573,7 +722,10 @@ local function Toggle(parent, text, opts)
         name = text, frame = row, menu = opts.menu, tab = parent:GetAttribute("Tab"),
     })
     row.MouseButton1Click:Connect(function() entry.set(not enabled) changed(id) end)
-    if binding then binding.fn = function() entry.set(not enabled) changed(id) end end
+    if binding then
+        binding.fn   = function() entry.set(not enabled) changed(id) end
+        binding.hold = function(v) entry.set(v) changed(id) end
+    end
     table.insert(Refreshers, refresh)
     refresh()
     return entry
@@ -693,35 +845,10 @@ local function Keybind(parent, text, defaultKey, callback, opts)
     opts = opts or {}
     local id = opts.id or idFor(parent, text)
     local row = create("Frame", { BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 16), LayoutOrder = nextOrder(), Parent = parent })
-    label(text, THEME.Text, 11, row, { AutomaticSize = Enum.AutomaticSize.None, Size = UDim2.new(1, -60, 1, 0), TextTruncate = Enum.TextTruncate.AtEnd })
-    local kb = create("TextButton", {
-        BackgroundTransparency = 1, AutoButtonColor = false, Text = "", TextColor3 = THEME.TextDim,
-        Font = THEME.Font, TextSize = 10, Size = UDim2.new(0, 56, 1, 0), Position = UDim2.new(1, -56, 0, 0),
-        TextXAlignment = Enum.TextXAlignment.Right, Parent = row,
-    })
-    local binding = { key = defaultKey, name = text, id = id, fn = callback, active = opts.active }
-    binding.refresh = function()
-        if listening == binding then
-            kb.Text, kb.TextColor3 = "[...]", THEME.Text
-        else
-            kb.Text = binding.key and ("[" .. keyName(binding.key) .. "]") or "[none]"
-            kb.TextColor3 = binding.key and THEME.Accent or THEME.TextDim
-        end
-        refreshKeybindList()
-    end
-    kb.MouseButton1Click:Connect(function() startListening(binding) end)
-    table.insert(Bindings, binding)
-    table.insert(Refreshers, binding.refresh)
-    binding.refresh()
-    register(id, {
-        get = function() return binding.key and binding.key.Name or "" end,
-        set = function(v)
-            local ok, kc = pcall(function() return Enum.KeyCode[v] end)
-            binding.key = (ok and v ~= "") and kc or nil
-            binding.refresh()
-        end,
-        name = text, frame = row, menu = opts.menu, tab = parent:GetAttribute("Tab"),
-    })
+    label(text, THEME.Text, 11, row, { AutomaticSize = Enum.AutomaticSize.None, Size = UDim2.new(1, -70, 1, 0), TextTruncate = Enum.TextTruncate.AtEnd })
+    local binding = BindButton(row, { id = id, name = text, default = defaultKey, fn = callback, active = opts.active, modes = opts.modes, menu = opts.menu })
+    local e = Registry[id]
+    e.name, e.frame, e.tab = text, row, parent:GetAttribute("Tab")
     return binding
 end
 
@@ -1063,14 +1190,24 @@ do -- Settings
     local P = Pages.Settings
     local menu = Section(P.left, "Menu")
     MenuBinding = Keybind(menu, "Menu Key", Enum.KeyCode.RightShift, function() setMenuOpen(not Main.Visible) end,
-        { id="ui.menu_key", menu=true, active=function() return Main.Visible end })
-    Dropdown(menu, "Accent", ACCENT_NAMES, "Aurum", { id="ui.accent", menu=true, callback=function(v)
-        for _, a in ipairs(ACCENTS) do if a[1]==v then setAccent(a[2]) end end
+        { id="ui.menu_key", menu=true, modes=false, active=function() return Main.Visible end })
+    Info(menu, "left-click a key to rebind, right-click for mode")
+    Dropdown(menu, "Theme", THEME_NAMES, THEMES[1].Name, { id="ui.theme", menu=true, callback=function(v)
+        setTheme(v)
+        if S.customAccent then setAccent(Color3.fromHex(S.customAccent)) end
     end })
-    Slider(menu, "UI Scale", 0.7, 1.4, 1, { id="ui.scale", menu=true, decimals=2, callback=function(v)
-        UIScaleObj.Scale=v task.defer(fitAll)
+    Toggle(menu, "Auto Scale", { id="ui.auto_scale", menu=true, callback=function(v)
+        ScaleState.auto = v
+        applyScale(v and autoScale() or ScaleState.manual)
     end })
-    Slider(menu, "Glow", 0, 100, 60, { id="ui.glow", menu=true, suffix="%", callback=function(v) setGlow(v/100) end })
+    Slider(menu, "UI Scale", 0.6, 1.6, 1, { decimals=2, id="ui.scale", menu=true, callback=function(v)
+        ScaleState.manual = v
+        if not ScaleState.auto then applyScale(v) end
+    end })
+    Info(menu, "ctrl + / ctrl - / ctrl 0 adjust scale")
+    Slider(menu, "Glow", 0, 100, 60, { suffix="%", id="ui.glow", menu=true, callback=function(v) setGlow(v/100) end })
+    Slider(menu, "Glow Spread", 50, 200, 100, { suffix="%", id="ui.glow_spread", menu=true, callback=function(v) setGlowSpread(v/100) end })
+    Dropdown(menu, "Glow Mode", { "Static", "Breathe", "Focus" }, "Static", { id="ui.glow_mode", menu=true, callback=setGlowMode })
     Toggle(menu, "Background Blur", { id="ui.blur", menu=true, default=true, callback=function(v) S.blur=v updateBlur() end })
     Slider(menu, "Blur Amount", 0, 30, 12, { id="ui.blur_amount", menu=true, callback=function(v) S.blurAmount=v updateBlur() end })
     Toggle(menu, "Dim Screen", { id="ui.dim", menu=true, callback=function(v) S.dim=v Dim.Visible=Main.Visible and v end })
@@ -1078,7 +1215,9 @@ do -- Settings
     local ov = Section(P.right, "Overlays")
     Toggle(ov, "Watermark", { id="ui.watermark", menu=true, default=true, callback=function(v) Windows.Watermark.Visible=v end })
     Toggle(ov, "Keybind List", { id="ui.keybinds", menu=true, default=true, callback=function(v) Windows.Keybinds.Visible=v end })
-    Toggle(ov, "Target HUD", { id="ui.target", menu=true, default=true, callback=function(v) Windows.Target.Visible=v end })
+    Toggle(ov, "Target HUD", { default=true, id="ui.target", menu=true, callback=function(v) TargetHUD.enabled=v TargetHUD.refresh() end })
+    Dropdown(ov, "Target Source", { "Self", "Crosshair", "Nearest" }, "Self", { id="ui.target_source", menu=true, callback=function(v) TargetHUD.source=v end })
+    Toggle(ov, "Hide Empty Target", { id="ui.target_hide_empty", menu=true, callback=function(v) TargetHUD.hideEmpty=v TargetHUD.refresh() end })
     Toggle(ov, "Preview Window", { id="ui.preview", menu=true, default=true, callback=function(v) S.preview=v if Windows.Preview then Windows.Preview.Visible=Main.Visible and v end end })
     Toggle(ov, "Watermark: FPS", { id="ui.wm_fps", menu=true, default=true, callback=function(v) S.wmFps=v end })
     Toggle(ov, "Watermark: Ping", { id="ui.wm_ping", menu=true, default=true, callback=function(v) S.wmPing=v end })
@@ -2087,43 +2226,118 @@ end
 -- TARGET HUD
 --------------------------------------------------------------------
 do
-    local _, content = makeWindow("Target", UDim2.new(0.5, -105, 1, -210), UDim2.new(0, 210, 0, 78), "Target")
-    local avatar = create("ImageLabel", {
-        BackgroundColor3 = THEME.Element, BorderSizePixel = 0, Size = UDim2.fromOffset(40, 40), Position = UDim2.new(0, 8, 0, 8), Parent = content,
-    })
-    accent(stroke(avatar, nil, 1, 0.3), "Color", true)
-    task.spawn(function()
-        pcall(function()
-            avatar.Image = Players:GetUserThumbnailAsync(LocalPlayer.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size48x48)
-        end)
-    end)
-    local nameLbl = accent(label(LocalPlayer.DisplayName, nil, 11, content, {
-        Position = UDim2.new(0, 56, 0, 6), AutomaticSize = Enum.AutomaticSize.None, Size = UDim2.new(1, -62, 0, 14), TextTruncate = Enum.TextTruncate.AtEnd,
+    local win, content = makeWindow("Target", UDim2.new(0.5, -120, 1, -220), UDim2.new(0, 240, 0, 88), "Target")
+
+    local avatar = themed(create("ImageLabel", { BorderSizePixel = 0, Size = UDim2.fromOffset(46, 46), Position = UDim2.new(0, 8, 0, 8), Parent = content }), "BackgroundColor3", "Element")
+    local avStroke = accent(stroke(avatar, nil, 1, 0.3), "Color", true)
+    local nameLbl = accent(label("", nil, 11, content, {
+        Position = UDim2.new(0, 62, 0, 6), AutomaticSize = Enum.AutomaticSize.None, Size = UDim2.new(1, -130, 0, 14), TextTruncate = Enum.TextTruncate.AtEnd,
     }), "TextColor3")
-    local infoLbl = label("12m  //  [running]", THEME.TextDim, 10, content, {
-        Position = UDim2.new(0, 56, 0, 19), AutomaticSize = Enum.AutomaticSize.None, Size = UDim2.new(1, -62, 0, 12), TextTruncate = Enum.TextTruncate.AtEnd,
+    local hpLbl = label("", THEME.Text, 10, content, {
+        AutomaticSize = Enum.AutomaticSize.None, Size = UDim2.new(0, 60, 0, 14), Position = UDim2.new(1, -68, 0, 6), TextXAlignment = Enum.TextXAlignment.Right,
     })
-    local bar = create("Frame", {
-        BackgroundColor3 = THEME.Element, BorderSizePixel = 0, Size = UDim2.new(1, -64, 0, 14), Position = UDim2.new(0, 56, 0, 34), Parent = content,
+    local infoLbl = label("", THEME.TextDim, 10, content, {
+        Position = UDim2.new(0, 62, 0, 21), AutomaticSize = Enum.AutomaticSize.None, Size = UDim2.new(1, -70, 0, 12), TextTruncate = Enum.TextTruncate.AtEnd,
     })
-    accent(stroke(bar, nil, 1, 0.2), "Color")
+    local bar = themed(create("Frame", {
+        BorderSizePixel = 0, ClipsDescendants = true, Size = UDim2.new(1, -70, 0, 10), Position = UDim2.new(0, 62, 0, 37), Parent = content,
+    }), "BackgroundColor3", "Element")
+    accent(stroke(bar, nil, 1, 0.25), "Color")
+    local trail = create("Frame", { BackgroundColor3 = rgb(190, 60, 60), BorderSizePixel = 0, Size = UDim2.fromScale(1, 1), Parent = bar }) -- damage trail
     local fill = accent(create("Frame", { BorderSizePixel = 0, Size = UDim2.fromScale(1, 1), Parent = bar }), "BackgroundColor3")
-    local hp = label("100 / 100", Color3.fromRGB(20, 20, 20), 10, bar, {
-        AutomaticSize = Enum.AutomaticSize.None, Size = UDim2.fromScale(1, 1), TextXAlignment = Enum.TextXAlignment.Center,
+    local stateLbl = label("", THEME.TextDim, 10, content, {
+        Position = UDim2.new(0, 62, 0, 51), AutomaticSize = Enum.AutomaticSize.None, Size = UDim2.new(0.5, 0, 0, 12), TextTruncate = Enum.TextTruncate.AtEnd,
     })
-    bind(RunService.Heartbeat, function()
-        local char = LocalPlayer.Character
+    local lockLbl = label("", THEME.TextDim, 10, content, {
+        AutomaticSize = Enum.AutomaticSize.None, Size = UDim2.new(0, 70, 0, 12), Position = UDim2.new(1, -78, 0, 51), TextXAlignment = Enum.TextXAlignment.Right,
+    })
+    local empty = label("no target", THEME.TextDim, 11, content, {
+        AutomaticSize = Enum.AutomaticSize.None, Size = UDim2.fromScale(1, 1), TextXAlignment = Enum.TextXAlignment.Center, Visible = false,
+    })
+    local parts = { avatar, nameLbl, hpLbl, infoLbl, bar, stateLbl, lockLbl }
+
+    local internal = false
+    TargetHUD.refresh = function()
+        local v = TargetHUD.enabled and (TargetHUD.target ~= nil or not TargetHUD.hideEmpty)
+        if win.Visible ~= v then internal = true win.Visible = v internal = false end
+    end
+    win:GetPropertyChangedSignal("Visible"):Connect(function()
+        if internal then return end -- closed/opened from the x button or top bar
+        local e = Registry["ui.target"]
+        if e and e.get() ~= win.Visible then e.set(win.Visible) changed("ui.target") end
+    end)
+
+    local lockStart, shownHp, trailHp = 0, 1, 1
+    local function setTarget(p)
+        if p == TargetHUD.target then return end
+        TargetHUD.target = p
+        lockStart, shownHp, trailHp = os.clock(), 1, 1
+        if p then
+            nameLbl.Text = p.DisplayName
+            avatar.Image = ""
+            task.spawn(function()
+                pcall(function() avatar.Image = Players:GetUserThumbnailAsync(p.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size48x48) end)
+            end)
+            avStroke.Transparency = 0
+            TweenService:Create(avStroke, TweenInfo.new(0.6), { Transparency = 0.3 }):Play()
+        end
+        for _, g in ipairs(parts) do g.Visible = p ~= nil end
+        empty.Visible = p == nil
+        TargetHUD.refresh()
+    end
+
+    local function pickTarget()
+        if TargetHUD.source == "Self" then return LocalPlayer end
+        local cam = workspace.CurrentCamera
+        local myRoot = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+        local centre = cam and cam.ViewportSize / 2
+        local best, bestScore = nil, math.huge
+        for _, p in ipairs(Players:GetPlayers()) do
+            local char = p ~= LocalPlayer and p.Character
+            local root = char and char:FindFirstChild("HumanoidRootPart")
+            local hum = char and char:FindFirstChildOfClass("Humanoid")
+            if root and hum and hum.Health > 0 then
+                local score
+                if TargetHUD.source == "Crosshair" and cam then
+                    local sp, on = cam:WorldToViewportPoint(root.Position)
+                    if on then score = (Vector2.new(sp.X, sp.Y) - centre).Magnitude end
+                elseif myRoot then
+                    score = (root.Position - myRoot.Position).Magnitude
+                end
+                if score and score < bestScore then best, bestScore = p, score end
+            end
+        end
+        return best
+    end
+
+    bind(RunService.Heartbeat, function(dt)
+        if not win.Visible then return end
+        local p = TargetHUD.target
+        local char = p and p.Character
         local hum = char and char:FindFirstChildOfClass("Humanoid")
-        if hum and hum.MaxHealth>0 then
-            fill.Size = UDim2.new(math.clamp(hum.Health/hum.MaxHealth,0,1),0,1,0)
-            hp.Text = ("%d / %d"):format(math.floor(hum.Health), hum.MaxHealth)
-            local state = hum:GetState().Name:lower()
-            infoLbl.Text = "self  //  ["..state.."]"
-            nameLbl.Text = LocalPlayer.DisplayName
+        if not (hum and hum.MaxHealth > 0) then return end
+        local ratio = math.clamp(hum.Health / hum.MaxHealth, 0, 1)
+        shownHp += (ratio - shownHp) * math.min(1, dt * 14)
+        trailHp = (trailHp < shownHp) and shownHp or (trailHp + (shownHp - trailHp) * math.min(1, dt * 3))
+        fill.Size = UDim2.new(shownHp, 0, 1, 0)
+        trail.Size = UDim2.new(trailHp, 0, 1, 0)
+        hpLbl.Text = ("%d / %d"):format(hum.Health + 0.5, hum.MaxHealth)
+
+        local myRoot = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+        local root = char:FindFirstChild("HumanoidRootPart")
+        local dist = (myRoot and root) and ("%dm"):format((root.Position - myRoot.Position).Magnitude) or "-"
+        infoLbl.Text = ("@%s  //  %s  //  %s"):format(p.Name, dist, p.Team and p.Team.Name:lower() or "no team")
+        stateLbl.Text = hum:GetState().Name:lower()
+        lockLbl.Text = ("%.1fs"):format(os.clock() - lockStart)
+    end)
+    task.spawn(function()
+        while win.Parent do
+            if TargetHUD.enabled then setTarget(pickTarget()) end
+            task.wait(0.15)
         end
     end)
+    setTarget(LocalPlayer)
 end
-
 --------------------------------------------------------------------
 -- WATERMARK
 --------------------------------------------------------------------
@@ -2164,10 +2378,13 @@ end
 -- KEYBIND LIST
 --------------------------------------------------------------------
 do
-    local win = makeWindow("Keybinds", UDim2.new(1, -190, 0, 84), UDim2.new(0, 170, 0, 0))
+    local win = makeWindow("Keybinds", UDim2.new(1, -210, 0, 84), UDim2.new(0, 190, 0, 0))
     win.AutomaticSize = Enum.AutomaticSize.Y
     accent(label("//", nil, 11, win, { Position = UDim2.new(0, 8, 0, 0), AutomaticSize = Enum.AutomaticSize.None, Size = UDim2.new(0, 14, 0, 20) }), "TextColor3")
-    label("keybinds", THEME.Text, 11, win, { Position = UDim2.new(0, 22, 0, 0), AutomaticSize = Enum.AutomaticSize.None, Size = UDim2.new(1, -30, 0, 20) })
+    label("keybinds", THEME.Text, 11, win, { Position = UDim2.new(0, 22, 0, 0), AutomaticSize = Enum.AutomaticSize.None, Size = UDim2.new(1, -60, 0, 20) })
+    local countLbl = label("0", THEME.TextDim, 10, win, {
+        AutomaticSize = Enum.AutomaticSize.None, Size = UDim2.new(0, 30, 0, 20), Position = UDim2.new(1, -38, 0, 0), TextXAlignment = Enum.TextXAlignment.Right,
+    })
     local line = accent(create("Frame", { BorderSizePixel = 0, Position = UDim2.new(0, 0, 0, 20), Size = UDim2.new(1, 0, 0, 1), Parent = win }), "BackgroundColor3")
     create("UIGradient", { Transparency = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0), NumberSequenceKeypoint.new(1, 1) }), Parent = line })
     local list = create("Frame", {
@@ -2181,27 +2398,31 @@ do
     refreshKeybindList = function()
         for _, r in ipairs(rows) do r:Destroy() end
         rows = {}
-        local count = 0
+        local shown = {}
         for i, b in ipairs(Bindings) do
             if b.key then
-                count += 1
-                local r = create("Frame", { BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 14), LayoutOrder = i, Parent = list })
-                local active = b.active and b.active() or false
-                label(b.name:lower(), active and THEME.Text or THEME.TextDim, 10, r, {
-                    AutomaticSize = Enum.AutomaticSize.None, Size = UDim2.new(1, -52, 1, 0), TextTruncate = Enum.TextTruncate.AtEnd,
-                })
-                label("[" .. keyName(b.key) .. "]", active and THEME.Accent or THEME.TextDim, 10, r, {
-                    AutomaticSize = Enum.AutomaticSize.None, Size = UDim2.new(0, 50, 1, 0), Position = UDim2.new(1, -50, 0, 0), TextXAlignment = Enum.TextXAlignment.Right,
-                })
-                table.insert(rows, r)
+                table.insert(shown, { b = b, i = i, on = (b.mode == "Always") or (b.active and b.active()) or false })
             end
         end
-        empty.Visible = count == 0
+        table.sort(shown, function(a, c) if a.on ~= c.on then return a.on end return a.i < c.i end) -- active first
+        for order, s in ipairs(shown) do
+            local b = s.b
+            local r = create("Frame", { BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 14), LayoutOrder = order, Parent = list })
+            create("Frame", { BackgroundColor3 = s.on and THEME.Accent or THEME.TextDim, BorderSizePixel = 0, Size = UDim2.fromOffset(4, 4), Position = UDim2.new(0, 0, 0.5, -2), Parent = r })
+            label(b.name:lower(), s.on and THEME.Text or THEME.TextDim, 10, r, {
+                Position = UDim2.new(0, 9, 0, 0), AutomaticSize = Enum.AutomaticSize.None, Size = UDim2.new(1, -100, 1, 0), TextTruncate = Enum.TextTruncate.AtEnd,
+            })
+            local tag = (b.mode ~= "Toggle" and ("[" .. b.mode:lower() .. "] ") or "") .. "[" .. keyName(b.key) .. "]"
+            label(tag, s.on and THEME.Accent or THEME.TextDim, 10, r, {
+                AutomaticSize = Enum.AutomaticSize.None, Size = UDim2.new(0, 88, 1, 0), Position = UDim2.new(1, -88, 0, 0), TextXAlignment = Enum.TextXAlignment.Right,
+            })
+            table.insert(rows, r)
+        end
+        countLbl.Text = tostring(#shown)
+        empty.Visible = #shown == 0
     end
     refreshKeybindList()
-end
-
---------------------------------------------------------------------
+end--------------------------------------------------------------------
 -- PLAYER LIST
 --------------------------------------------------------------------
 do
@@ -2312,27 +2533,61 @@ end
 -- THEMES
 --------------------------------------------------------------------
 do
-    local _, content = makeWindow("Themes", UDim2.new(1, -330, 0, 530), UDim2.new(0, 300, 0, 100), "Themes", false)
-    local grid = create("Frame", {
-        BackgroundTransparency = 1, Size = UDim2.new(1, -8, 1, -8), Position = UDim2.new(0, 4, 0, 4), Parent = content,
-    }, { create("UIGridLayout", { CellSize = UDim2.new(1 / 3, -3, 0, 30), CellPadding = UDim2.new(0, 4, 0, 4), SortOrder = Enum.SortOrder.LayoutOrder }) })
-    for i, a in ipairs(ACCENTS) do
-        local b = create("TextButton", {
-            BackgroundColor3 = THEME.Element, BorderSizePixel = 0, AutoButtonColor = false, Text = "", LayoutOrder = i, Parent = grid,
+    local _, content = makeWindow("Themes", UDim2.new(1, -330, 0, 500), UDim2.new(0, 300, 0, 290), "Themes", false)
+
+    local list = create("ScrollingFrame", {
+        BackgroundTransparency = 1, BorderSizePixel = 0, Size = UDim2.new(1, -8, 1, -34), Position = UDim2.new(0, 4, 0, 4),
+        CanvasSize = UDim2.new(), AutomaticCanvasSize = Enum.AutomaticSize.Y, ScrollBarThickness = 2, Parent = content,
+    }, {
+        create("UIGridLayout", { CellSize = UDim2.new(0.5, -4, 0, 34), CellPadding = UDim2.new(0, 4, 0, 4), SortOrder = Enum.SortOrder.LayoutOrder }),
+        create("UIPadding", { PaddingRight = UDim.new(0, 4) }),
+    })
+    accent(list, "ScrollBarImageColor3")
+
+    local cards = {}
+    for i, t in ipairs(THEMES) do
+        local card = noTheme(create("TextButton", {
+            BackgroundColor3 = t.Panel, BorderSizePixel = 0, AutoButtonColor = false, Text = "", LayoutOrder = i, Parent = list,
+        }))
+        local s = stroke(card, t.Accent, 1, 0.7)
+        local strip = noTheme(create("Frame", {
+            BackgroundTransparency = 1, Size = UDim2.new(0, 32, 1, -10), Position = UDim2.new(0, 5, 0, 5), Parent = card,
+        }, { create("UIListLayout", { FillDirection = Enum.FillDirection.Horizontal, Padding = UDim.new(0, 2) }) }))
+        for _, c in ipairs({ t.Background, t.Element, t.Accent }) do
+            local sw = noTheme(create("Frame", { BackgroundColor3 = c, BorderSizePixel = 0, Size = UDim2.new(0, 9, 1, 0), Parent = strip }))
+            stroke(sw, Color3.new(0, 0, 0), 1, 0.6)
+        end
+        label(t.Name:lower(), t.Text, 11, card, {
+            Position = UDim2.new(0, 42, 0, 0), AutomaticSize = Enum.AutomaticSize.None, Size = UDim2.new(1, -46, 1, 0), TextTruncate = Enum.TextTruncate.AtEnd,
         })
-        local s = stroke(b, a[2], 1, 0.6)
-        create("Frame", { BackgroundColor3 = a[2], BorderSizePixel = 0, Size = UDim2.new(0, 3, 1, -8), Position = UDim2.new(0, 4, 0, 4), Parent = b })
-        label(a[1]:lower(), THEME.Text, 11, b, { Position = UDim2.new(0, 14, 0, 0), AutomaticSize = Enum.AutomaticSize.None, Size = UDim2.new(1, -18, 1, 0), TextTruncate = Enum.TextTruncate.AtEnd })
-        b.MouseEnter:Connect(function() s.Transparency=0 end)
-        b.MouseLeave:Connect(function() s.Transparency=0.6 end)
-        b.MouseButton1Click:Connect(function()
-            local e = Registry["ui.accent"]
-            if e then e.set(a[1]) changed("ui.accent") end
-            Notify(NAME,"accent: "..a[1]:lower(),2)
+        cards[t.Name] = s
+        card.MouseEnter:Connect(function() s.Transparency = 0 end)
+        card.MouseLeave:Connect(function() s.Transparency = THEME.Name == t.Name and 0 or 0.7 end)
+        card.MouseButton1Click:Connect(function()
+            local e = Registry["ui.theme"]
+            S.customAccent = nil
+            if e then e.set(t.Name) changed("ui.theme") end
+            Notify(NAME, "theme: " .. t.Name:lower(), 2)
         end)
     end
-end
+    table.insert(Refreshers, function() for n, s in pairs(cards) do s.Transparency = (n == THEME.Name) and 0 or 0.7 end end)
 
+    -- custom accent (persisted as hex)
+    register("ui.custom_accent", {
+        get = function() return S.customAccent or "" end,
+        set = function(v) S.customAccent = (v ~= "" and v) or nil if S.customAccent then setAccent(Color3.fromHex(S.customAccent)) end end,
+        menu = true,
+    })
+    local row = create("Frame", { BackgroundTransparency = 1, Size = UDim2.new(1, -8, 0, 18), Position = UDim2.new(0, 4, 1, -24), Parent = content },
+        { create("UIGridLayout", { CellSize = UDim2.new(0.5, -2, 0, 18), CellPadding = UDim2.new(0, 4, 0, 0), SortOrder = Enum.SortOrder.LayoutOrder }) })
+    local pick = Button(row, "custom accent")
+    pick.MouseButton1Click:Connect(function()
+        openPalette(pick, function(col) Registry["ui.custom_accent"].set(col:ToHex()) changed("ui.custom_accent") end)
+    end)
+    Button(row, "reset accent", function()
+        Registry["ui.custom_accent"].set("") setTheme(THEME.Name) changed("ui.custom_accent")
+    end)
+end
 --------------------------------------------------------------------
 -- TOP BAR TABS
 --------------------------------------------------------------------
@@ -2372,6 +2627,7 @@ for name, id in pairs(WINDOW_IDS) do
     local win = Windows[name]
     win:GetPropertyChangedSignal("Visible"):Connect(function()
         refreshTab(name)
+        if name == "Target" then return end -- Target HUD syncs itself
         local e = Registry[id]
         if e and e.get() ~= win.Visible then e.set(win.Visible) changed(id) end
     end)
@@ -2390,34 +2646,55 @@ saveSettings = function(silent)
 end
 
 --------------------------------------------------------------------
--- Input
+-- Input: capture, dispatch (toggle / hold), scale hotkeys, global hide
 --------------------------------------------------------------------
+local Held = {}
 bind(UIS.InputBegan, function(input, gpe)
-    if input.UserInputType ~= Enum.UserInputType.Keyboard then return end
-    if listening then
+    local key = inputKey(input)
+    if not key then return end
+
+    if listening then -- capturing a new key
         local b = listening
         listening = nil
-        if input.KeyCode == Enum.KeyCode.Escape or input.KeyCode == Enum.KeyCode.Backspace then
-            b.key = nil
-        else
-            b.key = input.KeyCode
-        end
+        b.key = (key == Enum.KeyCode.Escape or key == Enum.KeyCode.Backspace) and nil or key
         b.refresh()
         changed(b.id)
         return
     end
-    if input.KeyCode == Enum.KeyCode.End then
+
+    if key == Enum.KeyCode.End then
         ScreenGui.Enabled = not ScreenGui.Enabled
         updateBlur()
         return
     end
-    if gpe and not (MenuBinding and input.KeyCode == MenuBinding.key) then return end
+
+    if Main.Visible and (UIS:IsKeyDown(Enum.KeyCode.LeftControl) or UIS:IsKeyDown(Enum.KeyCode.RightControl)) then
+        local e = Registry["ui.scale"]
+        if e then
+            if key == Enum.KeyCode.Equals then e.set(e.get() + 0.05) changed("ui.scale") return
+            elseif key == Enum.KeyCode.Minus then e.set(e.get() - 0.05) changed("ui.scale") return
+            elseif key == Enum.KeyCode.Zero then e.set(1) changed("ui.scale") return end
+        end
+    end
+
+    if gpe and not (MenuBinding and key == MenuBinding.key) then return end
     for _, b in ipairs(Bindings) do
-        if b.key == input.KeyCode and b.fn then task.spawn(b.fn) end
+        if b.key == key then
+            if b.mode == "Hold" and b.hold then
+                b.hold(true) Held[b] = true
+            elseif b.mode == "Toggle" and b.fn then
+                task.spawn(b.fn)
+            end
+        end
     end
 end)
-
---------------------------------------------------------------------
+bind(UIS.InputEnded, function(input)
+    local key = inputKey(input)
+    if not key then return end
+    for b in pairs(Held) do
+        if b.key == key then b.hold(false) Held[b] = nil end
+    end
+end)--------------------------------------------------------------------
 -- Clock
 --------------------------------------------------------------------
 task.spawn(function()
@@ -2432,7 +2709,9 @@ task.spawn(function()
         task.wait(1)
     end
 end)
-bind(ScreenGui:GetPropertyChangedSignal("AbsoluteSize"), function() task.defer(fitAll) end)
+bind(ScreenGui:GetPropertyChangedSignal("AbsoluteSize"), function()
+    if ScaleState.auto then applyScale(autoScale()) else task.defer(fitAll) end
+end)
 
 
 --------------------------------------------------------------------
