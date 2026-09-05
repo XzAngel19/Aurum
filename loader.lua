@@ -1,9 +1,10 @@
 -- loader.lua | Aurum v1.1 - Universal
--- Uso en executor: loadstring(game:HttpGet("https://raw.githubusercontent.com/XzAngel19/Aurum/arena/01a06a0a-aurum/loader.lua"))()
+-- Uso en executor: loadstring(game:HttpGet("https://raw.githubusercontent.com/XzAngel19/Aurum/refs/heads/arena/01a06a0a-aurum/loader.lua?v="..os.time()))()
 -- Este loader es universal (Synapse, KRNL, Fluxus, Delta, Hydrogen, Script-Ware) y hace fallback a filesystem.
 
-local BASE = "https://raw.githubusercontent.com/XzAngel19/Aurum/arena/01a06a0a-aurum/Aurum.lua"
-local FALLBACK = "https://raw.githubusercontent.com/XzAngel19/Aurum/arena/01a06a0a-aurum/Aurum.lua" -- alias
+local BASE_RAW = "https://raw.githubusercontent.com/XzAngel19/Aurum/refs/heads/arena/01a06a0a-aurum/Aurum.lua"
+local FALLBACK_RAW = "https://raw.githubusercontent.com/XzAngel19/Aurum/arena/01a06a0a-aurum/Aurum.lua" -- alias sin refs/heads
+local function withBust(u) return u .. "?v=" .. tostring(math.random(100000,999999)) .. "&t=" .. tostring(os.time()) end
 
 -- http universal: prueba game:HttpGet, syn.request, http_request, request, fluxus.request
 local function httpGet(url)
@@ -30,8 +31,11 @@ local function httpGet(url)
 end
 
 local function loadAurum()
-    local src = httpGet(BASE)
-    if not src or #src < 100 then src = httpGet(FALLBACK) end
+    local src = httpGet(withBust(BASE_RAW))
+    if not src or #src < 100 then src = httpGet(withBust(FALLBACK_RAW)) end
+    -- fallback sin bust por si el executor no soporta ?
+    if not src or #src < 100 then src = httpGet(BASE_RAW) end
+    if not src or #src < 100 then src = httpGet(FALLBACK_RAW) end
     if not src or #src < 100 then
         warn("[aurum] loader: remoto falló, probando filesystem local...")
         if type(readfile)=="function" and type(isfile)=="function" then
@@ -42,7 +46,7 @@ local function loadAurum()
         end
     end
     if not src or #src < 100 then
-        error("[aurum] no se pudo cargar Aurum.lua (remoto + local fallaron). Verifica tu executor y la URL: "..BASE)
+        error("[aurum] no se pudo cargar Aurum.lua (remoto + local fallaron). Verifica tu executor y la URL: "..BASE_RAW)
     end
     local _load = loadstring or load
     local fn, err = _load(src)
