@@ -11,12 +11,12 @@
 
 ### Opción A — Remote (una línea)
 ```lua
-loadstring(game:HttpGet("https://raw.githubusercontent.com/XzAngel19/Aurum/main/Aurum.lua"))()
+loadstring(game:HttpGet("https://raw.githubusercontent.com/XzAngel19/Aurum/arena/01a06a0a-aurum/Aurum.lua"))()
 ```
 
 ### Opción B — Loader local
 ```lua
-loadstring(game:HttpGet("https://raw.githubusercontent.com/XzAngel19/Aurum/main/loader.lua"))()
+loadstring(game:HttpGet("https://raw.githubusercontent.com/XzAngel19/Aurum/arena/01a06a0a-aurum/loader.lua"))()
 -- o si ya tienes el repo clonado en el executor:
 -- loadstring(readfile("Aurum/Aurum.lua"))()
 ```

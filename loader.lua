@@ -1,9 +1,9 @@
 -- loader.lua | Aurum v1.1 - Universal
--- Uso en executor: loadstring(game:HttpGet("https://raw.githubusercontent.com/XzAngel19/Aurum/main/loader.lua"))()
+-- Uso en executor: loadstring(game:HttpGet("https://raw.githubusercontent.com/XzAngel19/Aurum/arena/01a06a0a-aurum/loader.lua"))()
 -- Este loader es universal (Synapse, KRNL, Fluxus, Delta, Hydrogen, Script-Ware) y hace fallback a filesystem.
 
-local BASE = "https://raw.githubusercontent.com/XzAngel19/Aurum/main/Aurum.lua"
-local FALLBACK = "https://raw.githubusercontent.com/XzAngel19/Aurum/main/Aurum.lua" -- alias
+local BASE = "https://raw.githubusercontent.com/XzAngel19/Aurum/arena/01a06a0a-aurum/Aurum.lua"
+local FALLBACK = "https://raw.githubusercontent.com/XzAngel19/Aurum/arena/01a06a0a-aurum/Aurum.lua" -- alias
 
 -- http universal: prueba game:HttpGet, syn.request, http_request, request, fluxus.request
 local function httpGet(url)
