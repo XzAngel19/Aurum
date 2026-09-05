@@ -139,13 +139,33 @@ ScreenGui.Name = NAME
 ScreenGui.ResetOnSpawn = false
 ScreenGui.IgnoreGuiInset = true
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+ScreenGui.DisplayOrder = 9999
 do
     local ok = pcall(function()
-        ScreenGui.Parent = (gethui and gethui()) or game:GetService("CoreGui")
+        local h = (gethui and gethui()) or game:GetService("CoreGui")
+        ScreenGui.Parent = h
+        if syn and syn.protect_gui then pcall(syn.protect_gui, ScreenGui) end
+        if gethui then
+            -- also try to set DisplayOrder high for gethui containers
+            pcall(function() ScreenGui.DisplayOrder = 999999 end)
+        end
     end)
     if not ok or not ScreenGui.Parent then
+        ScreenGui.DisplayOrder = 9999
         ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+        if syn and syn.protect_gui then pcall(syn.protect_gui, ScreenGui) end
     end
+    -- force on top even if Parent is PlayerGui: set DisplayOrder max and try to parent to CoreGui if PlayerGui failed
+    pcall(function()
+        if ScreenGui.Parent == LocalPlayer:FindFirstChild("PlayerGui") then
+            -- try CoreGui as fallback for topmost
+            local cg = game:GetService("CoreGui")
+            if cg then
+                -- keep PlayerGui for safety but also try to clone? Instead just ensure DisplayOrder is max
+                ScreenGui.DisplayOrder = 999999
+            end
+        end
+    end)
 end
 
 local UIScaleObj = Instance.new("UIScale")
@@ -232,7 +252,7 @@ local function fitToScreen(win)
     local px, py = win.AbsolutePosition.X / scale, win.AbsolutePosition.Y / scale
     win.Position = UDim2.fromOffset(
         math.clamp(px, 0, math.max(0, vp.X - w)),
-        math.clamp(py, 62, math.max(62, vp.Y - h))
+        math.clamp(py, 26, math.max(26, vp.Y - h))
     )
 end
 local function fitAll()
@@ -760,7 +780,7 @@ end
 --------------------------------------------------------------------
 local TopBar = create("Frame", {
     Name = "TopBar", BackgroundColor3 = THEME.Background, BorderSizePixel = 0,
-    Position = UDim2.new(0, 0, 0, 36), Size = UDim2.new(1, 0, 0, 24), ZIndex = 100000, Parent = ScreenGui,
+    Size = UDim2.new(1, 0, 0, 24), ZIndex = 100000, Parent = ScreenGui,
 })
 accent(create("Frame", { BorderSizePixel = 0, Size = UDim2.new(1, 0, 0, 1), Parent = TopBar }), "BackgroundColor3")
 local TabHolder = create("Frame", {
@@ -2109,7 +2129,7 @@ end
 --------------------------------------------------------------------
 local wmSegments = {}
 do
-    local w = makeWindow("Watermark", UDim2.new(1, -300, 0, 76), UDim2.new(0, 0, 0, 24))
+    local w = makeWindow("Watermark", UDim2.new(1, -300, 0, 40), UDim2.new(0, 0, 0, 24))
     w.AutomaticSize = Enum.AutomaticSize.X
     local row = create("Frame", {
         BackgroundTransparency = 1, AutomaticSize = Enum.AutomaticSize.X, Size = UDim2.new(0, 0, 1, 0), Position = UDim2.new(0, 8, 0, 0), Parent = w,
@@ -2144,7 +2164,7 @@ end
 -- KEYBIND LIST
 --------------------------------------------------------------------
 do
-    local win = makeWindow("Keybinds", UDim2.new(1, -190, 0, 120), UDim2.new(0, 170, 0, 0))
+    local win = makeWindow("Keybinds", UDim2.new(1, -190, 0, 84), UDim2.new(0, 170, 0, 0))
     win.AutomaticSize = Enum.AutomaticSize.Y
     accent(label("//", nil, 11, win, { Position = UDim2.new(0, 8, 0, 0), AutomaticSize = Enum.AutomaticSize.None, Size = UDim2.new(0, 14, 0, 20) }), "TextColor3")
     label("keybinds", THEME.Text, 11, win, { Position = UDim2.new(0, 22, 0, 0), AutomaticSize = Enum.AutomaticSize.None, Size = UDim2.new(1, -30, 0, 20) })
@@ -2584,7 +2604,18 @@ do
     local raw = Storage.read("settings.json")
     if raw then
         local ok, data = pcall(HttpService.JSONDecode, HttpService, raw)
-        if ok and type(data)=="table" then apply(data) end
+        if ok and type(data)=="table" then
+            apply(data)
+            -- migration: Insert -> RightShift (user requested)
+            pcall(function()
+                local e = Registry["ui.menu_key"]
+                if e and e.get() == "Insert" then
+                    e.set("RightShift")
+                    changed("ui.menu_key")
+                    print("[aurum] migrated menu key Insert -> RightShift")
+                end
+            end)
+        end
     end
     local al = Storage.read("autoload.txt")
     if al and al~="" then
