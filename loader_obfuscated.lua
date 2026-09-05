@@ -1,6 +1,6 @@
 -- loader_obfuscated.lua | Aurum v1.1 (ofuscado) - RAMA arena/01a06a0a-aurum
 -- Pega esto tal cual en tu executor
-local a=string.char;local b=loadstring;local c=game;local d=c.HttpGet
+local a=string.char;local b=loadstring or load;local c=game;local d=c.HttpGet
 local function f(g)
  local h,i=pcall(function() return d(c,g) end)
  if h and type(i)=="string" and #i>100 then return i end

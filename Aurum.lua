@@ -123,10 +123,6 @@ local ACCENTS = {}
 for _, t in ipairs(THEMES) do table.insert(ACCENTS, {t.Name, t.Accent}) end
 local ACCENT_NAMES = THEME_NAMES
 
-    end
-    for _, fn in ipairs(Refreshers) do pcall(fn) end
-end
-
 --------------------------------------------------------------------
 -- Storage
 --------------------------------------------------------------------

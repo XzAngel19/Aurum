@@ -44,7 +44,8 @@ local function loadAurum()
     if not src or #src < 100 then
         error("[aurum] no se pudo cargar Aurum.lua (remoto + local fallaron). Verifica tu executor y la URL: "..BASE)
     end
-    local fn, err = loadstring(src)
+    local _load = loadstring or load
+    local fn, err = _load(src)
     if not fn then error("[aurum] loadstring falló: "..tostring(err)) end
     -- marca de origen para debugging
     if type(getgenv)=="function" then pcall(function() getgenv().AURUM_SRC = src:sub(1,64) end) end
