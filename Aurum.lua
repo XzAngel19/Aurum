@@ -159,7 +159,7 @@ Dim.BackgroundTransparency = 0.55
 Dim.BorderSizePixel = 0
 Dim.Size = UDim2.fromScale(1, 1)
 Dim.Visible = false
-Dim.ZIndex = 0
+Dim.ZIndex = 1
 Dim.Parent = ScreenGui
 
 local Blur = Instance.new("BlurEffect")
@@ -243,7 +243,7 @@ local function makeDraggable(frame, handle)
     handle = handle or frame
     local dragging, dragStart, startPos
     handle.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             dragging, dragStart, startPos = true, input.Position, frame.Position
         end
     end)
@@ -355,8 +355,15 @@ end
 local function showPopup(frame, anchor, width, height)
     closePopup()
     local scale = UIScaleObj.Scale
-    frame.Position = UDim2.fromOffset(anchor.AbsolutePosition.X / scale, (anchor.AbsolutePosition.Y + anchor.AbsoluteSize.Y) / scale + 2)
-    frame.Size = UDim2.fromOffset(width or anchor.AbsoluteSize.X / scale, height)
+    local vp = ScreenGui.AbsoluteSize / scale
+    local w = width or anchor.AbsoluteSize.X / scale
+    local x = anchor.AbsolutePosition.X / scale
+    local y = (anchor.AbsolutePosition.Y + anchor.AbsoluteSize.Y) / scale + 2
+    -- clamp to screen
+    x = math.clamp(x, 4, math.max(4, vp.X - w - 4))
+    y = math.clamp(y, 28, math.max(28, vp.Y - height - 4))
+    frame.Position = UDim2.fromOffset(x, y)
+    frame.Size = UDim2.fromOffset(w, height)
     frame.Visible = true
     openPopup = { frame = frame, anchor = anchor }
 end
@@ -377,6 +384,7 @@ local paletteFn
 for i, c in ipairs(PALETTE) do
     local b = create("TextButton", { Text = "", AutoButtonColor = false, BackgroundColor3 = c, BorderSizePixel = 0, LayoutOrder = i, Parent = palettePopup })
     stroke(b, Color3.new(0, 0, 0), 1, 0.5)
+    create("UICorner", { CornerRadius = UDim.new(0, 3), Parent = b })
     b.MouseButton1Click:Connect(function()
         if paletteFn then paletteFn(c) end
         closePopup()
@@ -795,7 +803,7 @@ label("build: " .. BUILD, THEME.Text, 11, header, { Position = UDim2.new(0, 80, 
 label("//", THEME.TextDim, 12, header, { Position = UDim2.new(0, 178, 0, 0) })
 local headerDate = label("", THEME.Text, 11, header, { Position = UDim2.new(0, 198, 0, 0) })
 local Search = create("TextBox", {
-    BackgroundColor3 = THEME.Element, BorderSizePixel = 0, Size = UDim2.new(0, 150, 0, 18), Position = UDim2.new(1, -184, 0, 5),
+    BackgroundColor3 = THEME.Element, BorderSizePixel = 0, Size = UDim2.new(0, 142, 0, 18), Position = UDim2.new(1, -182, 0, 5),
     Text = "", PlaceholderText = "search options...", PlaceholderColor3 = THEME.TextDim, TextColor3 = THEME.Text,
     Font = THEME.Font, TextSize = 11, TextXAlignment = Enum.TextXAlignment.Left, ClearTextOnFocus = false,
     TextTruncate = Enum.TextTruncate.AtEnd, Parent = header,
@@ -2405,6 +2413,132 @@ task.spawn(function()
     end
 end)
 bind(ScreenGui:GetPropertyChangedSignal("AbsoluteSize"), function() task.defer(fitAll) end)
+
+
+--------------------------------------------------------------------
+-- ModuleManager v2 (Aurum-specific, menos generico, mas eficaz)
+--------------------------------------------------------------------
+-- Propuesta: en lugar de RegisterModule genérico, usamos DSL declarativo:
+-- Aurum.Module("Visuals:MyESP", { Tab="Visuals", Section="My ESP", Config={Enabled=true}, OnInit=function(self) ... end })
+-- Ventajas:
+--   - Auto-crea Sección y registra Config schema para configs/settings
+--   - Auto-maneja Enable/Disable lifecycle (conecta/desconecta loops)
+--   - Auto-descubre archivos en Aurum/src/Modules/**/*.lua si el executor tiene filesystem
+--   - Menos boilerplate: self:Toggle/Slider/Dropdown ya bindeados a Config
+
+local ModuleManager = {}
+ModuleManager._modules = {}
+ModuleManager._order = {}
+
+function ModuleManager.Define(id, def)
+    assert(type(id)=="string" and id:find(":"), "Module id debe ser 'Tab:Nombre' ej: 'Visuals:MyESP'")
+    assert(type(def)=="table", "def debe ser tabla")
+    local tabName, modName = id:match("^([^:]+):(.+)$")
+    def._id = id
+    def._tab = tabName
+    def._name = modName
+    def.Config = def.Config or {}
+    def.OnInit = def.OnInit or function() end
+    def.OnEnable = def.OnEnable or function() end
+    def.OnDisable = def.OnDisable or function() end
+    -- helper para crear controles bindeados a Config
+    function def:Toggle(parent, text, key, opts)
+        opts = opts or {}
+        opts.id = opts.id or (self._tab:lower().."."..self._name:lower().."."..key:lower():gsub("%s+","_"))
+        -- si Config tiene default, úsalo
+        if self.Config[key] ~= nil and opts.default == nil then opts.default = self.Config[key] end
+        local entry = Toggle(parent, text, opts)
+        -- sync Config <-> Registry
+        local reg = Registry[opts.id]
+        if reg then
+            local origSet = reg.set
+            reg.set = function(v) origSet(v) self.Config[key]=v end
+        end
+        return entry
+    end
+    function def:Slider(parent, text, key, min, max, defVal, opts)
+        opts = opts or {}
+        opts.id = opts.id or (self._tab:lower().."."..self._name:lower().."."..key:lower():gsub("%s+","_"))
+        if self.Config[key] ~= nil and defVal == nil then defVal = self.Config[key] end
+        return Slider(parent, text, min, max, defVal, opts)
+    end
+    function def:Dropdown(parent, text, key, options, defVal, opts)
+        opts = opts or {}
+        opts.id = opts.id or (self._tab:lower().."."..self._name:lower().."."..key:lower():gsub("%s+","_"))
+        return Dropdown(parent, text, options, defVal, opts)
+    end
+    -- auto-sección: si no se provee parent, crea en Tab correspondiente
+    function def:Section(title)
+        local pages = Pages
+        local tab = pages[self._tab]
+        if not tab then error("Tab '"..self._tab.."' no existe. Tabs: Aim, Visuals, World, Player, Utility, Settings") end
+        -- elige columna con menos altura (balancea)
+        local leftH = tab.left.AbsoluteSize.Y
+        local rightH = tab.right.AbsoluteSize.Y
+        local col = leftH <= rightH and tab.left or tab.right
+        return Section(col, title or self._name)
+    end
+
+    ModuleManager._modules[id] = def
+    table.insert(ModuleManager._order, id)
+    -- auto-init si la UI ya está lista (Pages existe)
+    if Pages and Pages[def._tab] then
+        local ok, err = pcall(def.OnInit, def)
+        if not ok then warn("[aurum] Module "..id.." OnInit error: "..tostring(err)) end
+        -- si Config.Enabled es true, llama OnEnable
+        if def.Config.Enabled then pcall(def.OnEnable, def) end
+    end
+    return def
+end
+
+-- Auto-discovery filesystem (si el executor lo permite)
+function ModuleManager.AutoLoadFromFS()
+    if not hasFS then return end
+    local root = FOLDER.."/src/Modules"
+    if not isfolder(root) then return end
+    for _, file in ipairs(listfiles(root)) do
+        if file:match("%.lua$") then
+            local ok, mod = pcall(function() return loadstring(readfile(file))() end)
+            if ok and type(mod)=="table" and mod._id then
+                print("[aurum] auto-loaded module "..mod._id.." from "..file)
+            end
+        end
+    end
+    -- recursivo una profundidad
+    for _, folder in ipairs(listfiles(root)) do
+        if isfolder(folder) then
+            for _, file in ipairs(listfiles(folder)) do
+                if file:match("%.lua$") then
+                    pcall(function() loadstring(readfile(file))() end)
+                end
+            end
+        end
+    end
+end
+
+Aurum.Module = function(id, def) return ModuleManager.Define(id, def) end
+Aurum.ModulesV2 = ModuleManager
+
+-- Ejemplo (comentado) - cómo se vería un módulo NO genérico con este DSL:
+--[[
+Aurum.Module("Visuals:GunChams", {
+    Config = { Enabled = false, Color = Color3.fromRGB(255, 80, 80), ThroughWalls = true },
+    OnInit = function(self)
+        local sec = self:Section("Gun Chams")
+        self:Toggle(sec, "Enabled", "Enabled", { keybind=true, color=self.Config.Color })
+        self:Toggle(sec, "Through Walls", "ThroughWalls")
+        -- el resto de sliders/dropdowns...
+    end,
+    OnEnable = function(self)
+        -- conecta RenderStepped
+        self._conn = RunService.RenderStepped:Connect(function() ... end)
+    end,
+    OnDisable = function(self)
+        if self._conn then self._conn:Disconnect() end
+    end
+})
+--]]
+
 
 --------------------------------------------------------------------
 -- API Aurum
