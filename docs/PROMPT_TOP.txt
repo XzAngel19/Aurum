@@ -1,0 +1,15 @@
+Prompt para modelo TOP (solo tiene el menú base de ~1.6k líneas, sin GitHub, sin src/):
+
+Tienes un menú Roblox base de 1.6k líneas (solo UI: TopBar, Main 640x560 con 6 tabs, Sections con Toggles/Sliders/Dropdowns, sin lógica). Hazlo nivel Vape V4 sin cambiar su diseño dark/gold:
+
+1. Haz que TODOS los toggles/sliders funcionen de verdad (no mocks): Aim Assist con FOV + Wall/Team check, ESP Box/Health/Skeleton con Drawing+Highlight fallback, Crosshair/Snapline, World Fullbright/Skybox/Camera, Player Fly/Noclip/Speed/Jump. Usa Registry con IDs estables y pcall para no crashear.
+
+2. Cambia la tecla para abrir menú a RightShift y arregla el TopBar: con IgnoreGuiInset=true queda detrás del icono/chat de Roblox, muévelo a Position Y=36 y ajusta fitToScreen clamp a 62.
+
+3. Haz la arquitectura para agregar módulos en 1 línea: Aurum.Module("Tab:Nombre", {Config, OnInit, OnEnable}) con auto-id y lifecycle, no genérica.
+
+4. Hazlo universal: gethui() fallback, hasDrawing check, hasHookMM para SilentAim, filesystem con memoria fallback.
+
+5. Añade ArrayList derecha + Watermark draggeable + TargetHUD y Scaffold/Speed/Fly con bypass básico. Mantén Main 640x560, rail 100, Code font.
+
+Entrega solo Aurum.lua funcional y el loader de 1 línea.

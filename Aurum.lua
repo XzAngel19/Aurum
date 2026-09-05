@@ -1,7 +1,7 @@
 --[[
     aurum | client-side UI + framework + features
     build: release 1.1 | arquitectura modular
-    INSERT (rebindable) -> open / close menu
+    RightShift (rebindable) -> open / close menu
     END                 -> hide / show entire UI
     Top bar tabs        -> toggle overlay windows
     Header search box   -> filter options across tabs
@@ -232,7 +232,7 @@ local function fitToScreen(win)
     local px, py = win.AbsolutePosition.X / scale, win.AbsolutePosition.Y / scale
     win.Position = UDim2.fromOffset(
         math.clamp(px, 0, math.max(0, vp.X - w)),
-        math.clamp(py, 26, math.max(26, vp.Y - h))
+        math.clamp(py, 62, math.max(62, vp.Y - h))
     )
 end
 local function fitAll()
@@ -760,7 +760,7 @@ end
 --------------------------------------------------------------------
 local TopBar = create("Frame", {
     Name = "TopBar", BackgroundColor3 = THEME.Background, BorderSizePixel = 0,
-    Size = UDim2.new(1, 0, 0, 24), ZIndex = 100000, Parent = ScreenGui,
+    Position = UDim2.new(0, 0, 0, 36), Size = UDim2.new(1, 0, 0, 24), ZIndex = 100000, Parent = ScreenGui,
 })
 accent(create("Frame", { BorderSizePixel = 0, Size = UDim2.new(1, 0, 0, 1), Parent = TopBar }), "BackgroundColor3")
 local TabHolder = create("Frame", {
@@ -1042,7 +1042,7 @@ local MenuBinding
 do -- Settings
     local P = Pages.Settings
     local menu = Section(P.left, "Menu")
-    MenuBinding = Keybind(menu, "Menu Key", Enum.KeyCode.Insert, function() setMenuOpen(not Main.Visible) end,
+    MenuBinding = Keybind(menu, "Menu Key", Enum.KeyCode.RightShift, function() setMenuOpen(not Main.Visible) end,
         { id="ui.menu_key", menu=true, active=function() return Main.Visible end })
     Dropdown(menu, "Accent", ACCENT_NAMES, "Aurum", { id="ui.accent", menu=true, callback=function(v)
         for _, a in ipairs(ACCENTS) do if a[1]==v then setAccent(a[2]) end end
@@ -2109,7 +2109,7 @@ end
 --------------------------------------------------------------------
 local wmSegments = {}
 do
-    local w = makeWindow("Watermark", UDim2.new(1, -300, 0, 40), UDim2.new(0, 0, 0, 24))
+    local w = makeWindow("Watermark", UDim2.new(1, -300, 0, 76), UDim2.new(0, 0, 0, 24))
     w.AutomaticSize = Enum.AutomaticSize.X
     local row = create("Frame", {
         BackgroundTransparency = 1, AutomaticSize = Enum.AutomaticSize.X, Size = UDim2.new(0, 0, 1, 0), Position = UDim2.new(0, 8, 0, 0), Parent = w,
@@ -2144,7 +2144,7 @@ end
 -- KEYBIND LIST
 --------------------------------------------------------------------
 do
-    local win = makeWindow("Keybinds", UDim2.new(1, -190, 0, 84), UDim2.new(0, 170, 0, 0))
+    local win = makeWindow("Keybinds", UDim2.new(1, -190, 0, 120), UDim2.new(0, 170, 0, 0))
     win.AutomaticSize = Enum.AutomaticSize.Y
     accent(label("//", nil, 11, win, { Position = UDim2.new(0, 8, 0, 0), AutomaticSize = Enum.AutomaticSize.None, Size = UDim2.new(0, 14, 0, 20) }), "TextColor3")
     label("keybinds", THEME.Text, 11, win, { Position = UDim2.new(0, 22, 0, 0), AutomaticSize = Enum.AutomaticSize.None, Size = UDim2.new(1, -30, 0, 20) })
